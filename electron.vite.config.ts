@@ -11,6 +11,9 @@ export default defineConfig({
         '@main': path.resolve(__dirname, './src/main'),
       },
     },
+    build: {
+      outDir: 'dist-electron/main',
+    },
   },
   renderer: {
     entry: 'src/renderer/index.tsx',
@@ -20,5 +23,8 @@ export default defineConfig({
       },
     },
     plugins: [react()],
+    build: {
+      outDir: 'dist/renderer',
+    },
   },
 })
