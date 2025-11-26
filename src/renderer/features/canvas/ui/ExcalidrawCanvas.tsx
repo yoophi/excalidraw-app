@@ -29,21 +29,35 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({ initialData,
   }, [initialData])
 
   const handleSave = async () => {
-    if (!apiRef.current) return
+    console.log('Save button clicked, apiRef.current:', apiRef.current)
 
-    const elements = apiRef.current.getSceneElements()
-    const appState = apiRef.current.getAppState()
+    if (!apiRef.current) {
+      console.error('Excalidraw API not available')
+      alert('Drawing not ready yet. Please wait a moment and try again.')
+      return
+    }
 
-    const data: ExcalidrawData = { elements, appState }
-
-    setDrawingData(data)
-    onSave?.(data)
-
-    // Save to file
-    const filename = currentFile || `drawing_${Date.now()}`
     try {
+      console.log('Getting scene elements and app state...')
+      const elements = apiRef.current.getSceneElements()
+      const appState = apiRef.current.getAppState()
+
+      console.log('Elements:', elements?.length, 'AppState:', appState)
+
+      const data: ExcalidrawData = { elements, appState }
+
+      setDrawingData(data)
+      onSave?.(data)
+
+      // Save to file
+      const filename = currentFile || `drawing_${Date.now()}.excalidraw`
+      console.log('Saving to file:', filename)
+
       const result = await saveFileMutation.mutateAsync({ filename, data })
+      console.log('Save result:', result)
+
       if (result?.success) {
+        console.log('File saved, creating thumbnail...')
         // Save thumbnail
         const blob = await exportToBlob({
           elements,
@@ -52,9 +66,15 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({ initialData,
         })
         const imageData = await blobToBase64(blob)
         await saveThumbnailMutation.mutateAsync({ filePath: result.filePath, imageData })
+
+        alert(`Drawing saved successfully!\nLocation: ${result.filePath}`)
+        console.log('Thumbnail saved')
+      } else {
+        alert(`Failed to save: ${result?.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Failed to save file:', error)
+      alert(`Error saving file: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
 
