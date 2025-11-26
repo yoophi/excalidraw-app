@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useMemo } from 'react'
+import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react'
 import { Excalidraw, MainMenu, exportToBlob } from '@excalidraw/excalidraw'
 import '@excalidraw/excalidraw/index.css'
 import { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types/types'
@@ -12,11 +12,12 @@ interface ExcalidrawCanvasProps {
 }
 
 export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({ initialData, onSave }) => {
-  const apiRef = useRef<ExcalidrawImperativeAPI>(null)
+  const apiRef = useRef<ExcalidrawImperativeAPI | null>(null)
   const { currentFile, setDrawingData } = useDrawingStore()
   const saveFileMutation = useSaveFile()
   const saveThumbnailMutation = useSaveThumbnail()
   const [canvasKey, setCanvasKey] = useState(0)
+  const [isReady, setIsReady] = useState(false)
 
   // Create a memoized version of initialData to prevent unnecessary re-renders
   const memoizedInitialData = useMemo(() => {
@@ -28,11 +29,22 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({ initialData,
     }
   }, [initialData])
 
-  const handleSave = async () => {
-    console.log('Save button clicked, apiRef.current:', apiRef.current)
+  // Mark as ready once component mounts
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      console.log('Setting isReady to true after mount')
+      setIsReady(true)
+    }, 500)
 
-    if (!apiRef.current) {
-      console.error('Excalidraw API not available')
+    return () => clearTimeout(timer)
+  }, [])
+
+  const handleSave = useCallback(async () => {
+    console.log('Save button clicked, apiRef.current:', apiRef.current)
+    console.log('isReady state:', isReady)
+
+    if (!apiRef.current || !isReady) {
+      console.error('Excalidraw API not available or not ready')
       alert('Drawing not ready yet. Please wait a moment and try again.')
       return
     }
@@ -43,6 +55,10 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({ initialData,
       const appState = apiRef.current.getAppState()
 
       console.log('Elements:', elements?.length, 'AppState:', appState)
+
+      if (!elements || !appState) {
+        throw new Error('Failed to get scene data from Excalidraw')
+      }
 
       const data: ExcalidrawData = { elements, appState }
 
@@ -76,7 +92,7 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({ initialData,
       console.error('Failed to save file:', error)
       alert(`Error saving file: ${error instanceof Error ? error.message : String(error)}`)
     }
-  }
+  }, [currentFile, setDrawingData, saveFileMutation, saveThumbnailMutation, onSave, isReady])
 
   const blobToBase64 = (blob: Blob): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -106,6 +122,13 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({ initialData,
           initialData={memoizedInitialData}
           onChange={(elements, appState) => {
             // Auto-save can be implemented here
+          }}
+          onPointerUp={() => {
+            // Mark as ready when user interacts
+            setIsReady(true)
+          }}
+          onWheel={() => {
+            setIsReady(true)
           }}
           UIOptions={{
             canvasMenu: {
