@@ -1,0 +1,42 @@
+{
+  "type": "module",
+  "name": "excalidraw-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist-electron/main/index.js",
+  "homepage": "./",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Pyunghyuk Yoo",
+  "license": "ISC",
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.17",
+    "@types/node": "^24.10.1",
+    "@vitejs/plugin-react": "^5.1.1",
+    "autoprefixer": "^10.4.22",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "electron": "^39.2.3",
+    "electron-vite": "^4.0.1",
+    "postcss": "^8.5.6",
+    "tailwind-merge": "^3.4.0",
+    "tailwindcss": "^4.1.17",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.4",
+    "vite-plugin-svgr": "^4.5.0"
+  },
+  "dependencies": {
+    "@excalidraw/excalidraw": "^0.18.0",
+    "@tanstack/react-query": "^5.90.11",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-router": "^7.9.6",
+    "zustand": "^5.0.8"
+  }
+}
