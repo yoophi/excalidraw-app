@@ -216,6 +216,108 @@ npx shadcn-ui@latest add button
 npm run type-check
 ```
 
+## 개발 상태 및 진행 사항
+
+### ✅ 완료된 작업
+
+#### Phase 1: 프로젝트 초기 설정
+- [x] Electron + Vite + React 프로젝트 구조 설정
+- [x] TypeScript 설정
+- [x] Tailwind CSS 4 + PostCSS 설정
+- [x] Path alias 설정 (@/, @main/)
+
+#### Phase 2: Main Process 구현
+- [x] Electron 애플리케이션 라이프사이클 관리
+- [x] BrowserWindow 생성 (노드 통합, nodeIntegration)
+- [x] IPC 채널 설정 및 핸들러 구현
+  - [x] `file:save` - `.excalidraw` 파일 저장
+  - [x] `file:load` - `.excalidraw` 파일 로드
+  - [x] `file:saveThumbnail` - `.png` 썸네일 저장
+  - [x] `file:browse` - 파일 시스템 탐색
+
+#### Phase 3: Renderer Process 구현
+- [x] React + TypeScript 기본 구조
+- [x] Zustand 상태 관리 (drawingStore)
+- [x] TanStack Query 커스텀 훅 (useFileOperations)
+- [x] Feature Sliced Design 적용
+  - [x] `features/canvas/` - Excalidraw 캔버스
+  - [x] `features/fileBrowser/` - 파일 브라우저
+
+#### Phase 4: Excalidraw 통합
+- [x] Excalidraw 컴포넌트 렌더링
+- [x] CSS 스타일시트 임포트
+- [x] 레이아웃 및 플렉스 설정
+
+#### Phase 5: 버그 수정 및 개선 (완료)
+- [x] **Excalidraw API 초기화 문제 해결**
+  - 문제: ref 패턴으로 API를 받으려 했으나 항상 null
+  - 해결: `excalidrawAPI` prop callback 사용 (공식 방법)
+  - 결과: Save 버튼이 "Drawing not ready" 에러 없이 작동
+
+- [x] **AppState 직렬화 문제 해결**
+  - 문제: `appState.collaborators`는 Map 객체인데 JSON으로 직렬화 불가
+  - 해결: 저장 시 제거, 로드 시 빈 Map으로 재구성
+  - 결과: 파일 저장/로드 시 "collaborators.forEach is not a function" 에러 해결
+
+### 🔄 진행 중인 작업
+- 앱 종합 테스트 및 안정성 검증
+
+### 📋 향후 작업 (TODO)
+
+#### Phase 6: 기능 개선
+- [ ] **자동 저장 기능**
+  - `onChange` 콜백 활용하여 실시간 자동 저장
+  - 저장 인터벌 설정 (예: 30초마다)
+
+- [ ] **파일 브라우저 완성**
+  - 파일 목록에서 그림 미리보기 (썸네일)
+  - 파일 선택 시 자동 로드
+  - 파일 삭제 기능
+
+- [ ] **UI/UX 개선**
+  - shadcn/ui 컴포넌트 추가 (Dialog, Button 등)
+  - 파일 저장 상태 표시 (저장됨/저장 중 등)
+  - 에러 처리 및 사용자 피드백
+
+#### Phase 7: 보안 및 최적화
+- [ ] **Content Security Policy (CSP) 설정**
+  - 현재 "unsafe-eval" 경고 해결
+  - 보안 정책 강화
+
+- [ ] **렌더러 프로세스 보안 강화**
+  - nodeIntegration 비활성화 (프로덕션)
+  - preload 스크립트 사용
+  - Context Isolation 활성화
+
+- [ ] **성능 최적화**
+  - 번들 크기 분석 및 최적화
+  - 이미지 최적화
+  - 메모리 누수 확인
+
+#### Phase 8: 빌드 및 배포
+- [ ] **프로덕션 빌드 설정**
+  - 애플리케이션 아이콘 설정
+  - DMG/EXE 빌더 설정
+  - 자동 업데이트 구성
+
+- [ ] **배포 준비**
+  - 테스트 완료
+  - 배포 가이드 작성
+
+### 버그 수정 로그
+
+#### Fix #1: Excalidraw API Reference (2025-11-27)
+**Commit**: `5998a9c`
+- 원인: ref 콜백 패턴이 Excalidraw v0.18.0에서 지원되지 않음
+- 해결: `excalidrawAPI` prop 사용
+- 영향: "Drawing not ready" 에러 완전 해결
+
+#### Fix #2: AppState Serialization (2025-11-27)
+**Commit**: `5998a9c`
+- 원인: `appState.collaborators` Map 객체를 JSON으로 직렬화할 수 없음
+- 해결: 로드 시 Map 재구성, 저장 시 적절한 처리
+- 영향: 파일 저장/로드 시 크래시 해결
+
 ## 문제 해결
 
 ### 빌드 에러
@@ -225,6 +327,14 @@ npm run type-check
 ### IPC 통신 오류
 - Main 프로세스에서 IPC 핸들러가 올바르게 등록되었는지 확인
 - Renderer에서 `window.electron?.ipcRenderer.invoke()` 호출 확인
+
+### Excalidraw 렌더링 문제
+- CSS 임포트 확인: `import '@excalidraw/excalidraw/index.css'`
+- 레이아웃 확인: 플렉스 컨테이너에 적절한 높이/너비 설정
+
+### API 초기화 문제 (해결됨)
+- ref 패턴 대신 `excalidrawAPI` prop callback 사용
+- `ExcalidrawImperativeAPI` 타입 사용
 
 ## 라이선스
 
