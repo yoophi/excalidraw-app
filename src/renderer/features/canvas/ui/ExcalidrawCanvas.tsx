@@ -1,5 +1,6 @@
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useRef, useEffect, useState, useMemo } from 'react'
 import { Excalidraw, MainMenu, exportToBlob } from '@excalidraw/excalidraw'
+import '@excalidraw/excalidraw/index.css'
 import { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types/types'
 import { useSaveFile, useSaveThumbnail } from '@/shared/hooks/useFileOperations'
 import { useDrawingStore } from '@/shared/store/drawingStore'
@@ -15,6 +16,17 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({ initialData,
   const { currentFile, setDrawingData } = useDrawingStore()
   const saveFileMutation = useSaveFile()
   const saveThumbnailMutation = useSaveThumbnail()
+  const [canvasKey, setCanvasKey] = useState(0)
+
+  // Create a memoized version of initialData to prevent unnecessary re-renders
+  const memoizedInitialData = useMemo(() => {
+    if (!initialData) return undefined
+    return {
+      ...initialData,
+      elements: Array.isArray(initialData.elements) ? initialData.elements : [],
+      appState: initialData.appState || {},
+    }
+  }, [initialData])
 
   const handleSave = async () => {
     if (!apiRef.current) return
@@ -56,8 +68,8 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({ initialData,
   }
 
   return (
-    <div className="w-full h-full flex flex-col">
-      <div className="flex justify-between items-center p-4 bg-gray-100 border-b">
+    <div className="w-full h-full flex flex-col" style={{ overflow: 'hidden' }}>
+      <div className="flex justify-between items-center p-4 bg-gray-100 border-b flex-shrink-0">
         <h1 className="text-lg font-bold">Excalidraw</h1>
         <button
           onClick={handleSave}
@@ -67,10 +79,11 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({ initialData,
           {saveFileMutation.isPending ? 'Saving...' : 'Save'}
         </button>
       </div>
-      <div className="flex-1">
+      <div className="flex-1" style={{ overflow: 'hidden', width: '100%', height: '100%' }}>
         <Excalidraw
+          key={canvasKey}
           ref={apiRef}
-          initialData={initialData}
+          initialData={memoizedInitialData}
           onChange={(elements, appState) => {
             // Auto-save can be implemented here
           }}
