@@ -1,7 +1,6 @@
-import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react'
+import React, { useRef, useEffect, useState, useMemo, useCallback, forwardRef } from 'react'
 import { Excalidraw, exportToBlob } from '@excalidraw/excalidraw'
 import '@excalidraw/excalidraw/index.css'
-import type { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types/types'
 import { useSaveFile, useSaveThumbnail } from '@/shared/hooks/useFileOperations'
 import { useDrawingStore } from '@/shared/store/drawingStore'
 import { ExcalidrawData } from '@/shared/api/ipc'
@@ -12,7 +11,7 @@ interface ExcalidrawCanvasProps {
 }
 
 export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({ initialData, onSave }) => {
-  const excalidrawAPI = useRef<ExcalidrawImperativeAPI | null>(null)
+  const excalidrawAPI = useRef<any>(null)
   const { currentFile, setDrawingData } = useDrawingStore()
   const saveFileMutation = useSaveFile()
   const saveThumbnailMutation = useSaveThumbnail()
@@ -27,6 +26,19 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({ initialData,
       appState: initialData.appState || {},
     }
   }, [initialData])
+
+  // Check if API is available every second
+  useEffect(() => {
+    const checkInterval = setInterval(() => {
+      if (excalidrawAPI.current && typeof excalidrawAPI.current.getSceneElements === 'function') {
+        console.log('Excalidraw API is available!')
+        setIsReady(true)
+        clearInterval(checkInterval)
+      }
+    }, 100)
+
+    return () => clearInterval(checkInterval)
+  }, [])
 
   const handleSave = useCallback(async () => {
     console.log('Save button clicked, excalidrawAPI.current:', excalidrawAPI.current)
@@ -117,10 +129,14 @@ export const ExcalidrawCanvas: React.FC<ExcalidrawCanvasProps> = ({ initialData,
           onWheel={() => {
             setIsReady(true)
           }}
-          ref={(api: ExcalidrawImperativeAPI) => {
+          ref={(api: any) => {
             console.log('Excalidraw mounted with API:', api)
             excalidrawAPI.current = api
             if (api) {
+              console.log('API methods available:', {
+                getSceneElements: typeof api.getSceneElements,
+                getAppState: typeof api.getAppState,
+              })
               setIsReady(true)
             }
           }}
